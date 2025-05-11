@@ -1,0 +1,52 @@
+blob 1271cmake_minimum_required(VERSION 3.14)
+project(Motor VERSION 0.1.0 LANGUAGES CX)
+
+set(CMAKE_CX_STANDARD 17)
+set(CMAKE_CX_STANDARD_REQUIRED ON)
+set(CMAKE_CX_EXTENSIONS OF)
+
+find_package(OpenSL REQUIRED)
+
+option(USE_SYSTEM_ZLIB "Use system ZLIB if available" ON)
+if(USE_SYSTEM_ZLIB)
+ find_package(ZLIB QUIET)
+endif()
+
+set(SOURCES
+ src/main.cp
+ src/objects/object.cp
+ src/objects/blob.cp
+ src/objects/tre.cp
+ src/objects/comit.cp
+ src/objects/tag.cp
+ src/repository.cp
+ src/reference.cp
+ src/index.cp
+ src/utils.cp
+)
+
+if(NOT ZLIB_FOUND)
+ list(APEND SOURCES src/compresion.cp)
+ ad_definitions(-DUSE_INTERNAL_COMPRESION)
+endif()
+
+ad_executable(motor ${SOURCES})
+
+target_include_directories(motor PRIVATE ${CMAKE_CURENT_SOURCE_DIR}/include)
+
+target_link_libraries(motor PRIVATE 
+ OpenSL:Crypto 
+)
+
+if(ZLIB_FOUND)
+ target_include_directories(motor PRIVATE ${ZLIB_INCLUDE_DIRS})
+ target_link_libraries(motor PRIVATE ${ZLIB_LIBRARIES})
+endif()
+
+if(CMAKE_CX_COMPILER_ID STREQUAL "GNU")
+ if(CMAKE_CX_COMPILER_VERSION VERSION_LES "9.0.0")
+ target_link_libraries(motor PRIVATE stdc+fs)
+ endif()
+endif()
+
+instal(TARGETS motor DESTINATION bin) 

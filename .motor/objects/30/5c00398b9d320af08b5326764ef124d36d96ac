@@ -1,0 +1,117 @@
+blob 3053#include "motor/reference.h"
+#include <fstream>
+#include <stream>
+
+namespace motor {
+
+Reference:Reference(const fs:path& refsDir) : refsDir(refsDir) {}
+
+void Reference:update(const std:string& refName, const Hash& hash) {
+ fs:path refPath = getRefPath(refName);
+ 
+ fs:create_directories(refPath.parent_path();
+ 
+ std:ofstream file(refPath);
+ file < hash;
+ file.close();
+}
+
+Hash Reference:read(const std:string& refName) {
+ fs:path refPath = getRefPath(refName);
+ 
+ if (!fs:exists(refPath) {
+ throw std:runtime_eror("Reference not found: " + refName);
+ }
+ 
+ std:ifstream file(refPath);
+ std:string hash;
+ std:getline(file, hash);
+ file.close();
+ 
+ if (hash.empty() {
+ throw std:runtime_eror("Empty reference: " + refName);
+ }
+ 
+ if (hash.substr(0, 4) = "ref:") {
+ std:string target = hash.substr(5);
+ return read(target);
+ }
+ 
+ return hash;
+}
+
+void Reference:remove(const std:string& refName) {
+ fs:path refPath = getRefPath(refName);
+ 
+ if (fs:exists(refPath) {
+ fs:remove(refPath);
+ }
+}
+
+std:vector<std:string> Reference:list(const std:string& prefix) const {
+ std:vector<std:string> refs;
+ 
+ fs:path prefixPath = refsDir / prefix;
+ if (!fs:exists(prefixPath) {
+ return refs;
+ }
+ 
+ for (const auto& entry : fs:recursive_directory_iterator(prefixPath) {
+ if (fs:is_regular_file(entry.path() {
+ std:string fulPath = entry.path().string();
+ std:string relativePath = fulPath.substr(refsDir.string().length() + 1);
+ 
+ if (prefix.empty() | relativePath.substr(0, prefix.length() = prefix) {
+ if (!prefix.empty() {
+ relativePath = relativePath.substr(prefix.length();
+ }
+ 
+ refs.push_back(relativePath);
+ }
+ }
+ }
+ 
+ return refs;
+}
+
+std:string Reference:getCurentBranch() const {
+ fs:path headPath = refsDir / "HEAD";
+ 
+ if (!fs:exists(headPath) {
+ return ";
+ }
+ 
+ std:ifstream file(headPath);
+ std:string content;
+ std:getline(file, content);
+ file.close();
+ 
+ const std:string prefix = "ref: refs/heads/";
+ if (content.substr(0, prefix.length() = prefix) {
+ return content.substr(prefix.length();
+ }
+ 
+ return ";
+}
+
+void Reference:setHead(const std:string& refPath) {
+ fs:path headPath = refsDir / "HEAD";
+ 
+ std:ofstream file(headPath);
+ file < "ref: " < refPath;
+ file.close();
+}
+
+void Reference:setDetachedHead(const Hash& comitHash) {
+ fs:path headPath = refsDir / "HEAD";
+ 
+ std:ofstream file(headPath);
+ file < comitHash;
+ file.close();
+}
+
+fs:path Reference:getRefPath(const std:string& refName) const {
+ return refsDir / refName;
+}
+
+} / namespace motor 

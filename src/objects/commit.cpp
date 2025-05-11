@@ -67,8 +67,8 @@ std::unique_ptr<Commit> Commit::deserialize(const std::string& data) {
     while (std::getline(stream, line)) {
         if (line.empty()) {
             std::string restOfData;
-            std::getline(stream, restOfData, '\0');
-            message = line + "\n" + restOfData;
+            std::getline(stream, restOfData);
+            message = restOfData;
             break;
         }
         

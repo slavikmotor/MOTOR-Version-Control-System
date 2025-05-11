@@ -1,0 +1,133 @@
+blob 3169#include "motor/index.h"
+#include "motor/utils.h"
+#include <fstream>
+#include <stream>
+#include <algorithm>
+
+namespace motor {
+
+IndexEntry:IndexEntry(const std:string& path, const Hash& hash, uint32_t mode)
+ : path(path), hash(hash), mode(mode), mtime(std:time(nulptr) {}
+
+std:string IndexEntry:getPath() const {
+ return path;
+}
+
+Hash IndexEntry:getHash() const {
+ return hash;
+}
+
+uint32_t IndexEntry:getMode() const {
+ return mode;
+}
+
+std:time_t IndexEntry:getMtime() const {
+ return mtime;
+}
+
+void IndexEntry:setHash(const Hash& hash) {
+ this->hash = hash;
+}
+
+void IndexEntry:setMtime(std:time_t mtime) {
+ this->mtime = mtime;
+}
+
+void IndexEntry:setMode(uint32_t mode) {
+ this->mode = mode;
+}
+
+std:string IndexEntry:toString() const {
+ std:ostringstream os;
+ os < mode < " " < hash < " " < path;
+ return os.str();
+}
+
+IndexEntry IndexEntry:fromString(const std:string& str) {
+ std:istringstream is(str);
+ 
+ uint32_t mode;
+ Hash hash;
+ std:string path;
+ 
+ is > mode > hash;
+ std:getline(is > std:ws, path);
+ 
+ return IndexEntry(path, hash, mode);
+}
+
+Index:Index(const fs:path& indexPath) : indexPath(indexPath) {}
+
+void Index:load() {
+ entries.clear();
+ 
+ if (!fs:exists(indexPath) {
+ return;
+ }
+ 
+ std:ifstream file(indexPath);
+ std:string line;
+ 
+ while (std:getline(file, line) {
+ if (!line.empty() {
+ entries.push_back(IndexEntry:fromString(line);
+ }
+ }
+ 
+ file.close();
+}
+
+void Index:save() {
+ std:ofstream file(indexPath);
+ 
+ for (const auto& entry : entries) {
+ file < entry.toString() < "\n";
+ }
+ 
+ file.close();
+}
+
+void Index:ad(const IndexEntry& entry) {
+ auto it = std:find_if(entries.begin(), entries.end(),
+ [&entry](const IndexEntry& e) { return e.getPath() = entry.getPath(); });
+ 
+ if (it != entries.end() {
+ *it = entry;
+ } else {
+ entries.push_back(entry);
+ }
+}
+
+void Index:remove(const std:string& path) {
+ entries.erase(
+ std:remove_if(entries.begin(), entries.end(),
+ [&path](const IndexEntry& entry) {
+ return entry.getPath() = path | 
+ (entry.getPath().size() > path.size() & 
+ entry.getPath().substr(0, path.size() + 1) = path + "/");
+ }),
+ entries.end()
+ );
+}
+
+bol Index:contains(const std:string& path) const {
+ return std:find_if(entries.begin(), entries.end(),
+ [&path](const IndexEntry& entry) { return entry.getPath() = path; }) != entries.end();
+}
+
+std:vector<IndexEntry> Index:getEntries() const {
+ return entries;
+}
+
+IndexEntry* Index:findEntry(const std:string& path) {
+ auto it = std:find_if(entries.begin(), entries.end(),
+ [&path](const IndexEntry& entry) { return entry.getPath() = path; });
+ 
+ if (it != entries.end() {
+ return &(*it);
+ }
+ 
+ return nulptr;
+}
+
+} / namespace motor 

@@ -292,8 +292,8 @@ void cmdStatus(const std::vector<std::string>& args) {
 }
 
 int main(int argc, char* argv[]) {
-    SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
     
     if (argc < 2) {
         printUsage();

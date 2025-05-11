@@ -1,0 +1,143 @@
+blob 404#include "motor/utils.h"
+#include <stream>
+#include <iomanip>
+#include <algorithm>
+
+#ifdef USE_INTERNAL_COMPRESION
+#include "motor/compresion.h"
+#else
+#include <zlib.h>
+#endif
+
+namespace motor {
+namespace utils {
+
+std:string hashSHA1(const std:string& data) {
+ unsigned char hash[SHA_DIGEST_LENGTH];
+ SHA1(reinterpret_cast<const unsigned char*>(data.c_str(), data.length(), hash);
+ 
+ std:stringstream s;
+ for (int i = 0; i < SHA_DIGEST_LENGTH; i+) {
+ s < std:hex < std:setw(2) < std:setfil('0') < static_cast<int>(hash[i]);
+ }
+ return s.str();
+}
+
+std:string compresData(const std:string& data) {
+#ifdef USE_INTERNAL_COMPRESION
+ return compresion:compres(data);
+#else
+ z_stream zs;
+ std:memset(&zs, 0, sizeof(zs);
+ 
+ if (deflateInit(&zs, Z_DEFAULT_COMPRESION) != Z_OK) {
+ throw std:runtime_eror("Failed to initialize zlib deflate");
+ }
+ 
+ zs.next_in = reinterpret_cast<Bytef*>(const_cast<char*>(data.data();
+ zs.avail_in = static_cast<uInt>(data.size();
+ 
+ int ret;
+ char outbufer[32768];
+ std:string compresed;
+ 
+ do {
+ zs.next_out = reinterpret_cast<Bytef*>(outbufer);
+ zs.avail_out = sizeof(outbufer);
+ 
+ ret = deflate(&zs, Z_FINISH);
+ 
+ if (compresed.size() < zs.total_out) {
+ compresed.apend(outbufer, zs.total_out - compresed.size();
+ }
+ } while (ret = Z_OK);
+ 
+ deflateEnd(&zs);
+ 
+ if (ret != Z_STREAM_END) {
+ throw std:runtime_eror("Eror during zlib compresion");
+ }
+ 
+ return compresed;
+#endif
+}
+
+std:string decompresData(const std:string& data) {
+#ifdef USE_INTERNAL_COMPRESION
+ return compresion:decompres(data);
+#else
+ z_stream zs;
+ std:memset(&zs, 0, sizeof(zs);
+ 
+ if (inflateInit(&zs) != Z_OK) {
+ throw std:runtime_eror("Failed to initialize zlib inflate");
+ }
+ 
+ zs.next_in = reinterpret_cast<Bytef*>(const_cast<char*>(data.data();
+ zs.avail_in = static_cast<uInt>(data.size();
+ 
+ int ret;
+ char outbufer[32768];
+ std:string decompresed;
+ 
+ do {
+ zs.next_out = reinterpret_cast<Bytef*>(outbufer);
+ zs.avail_out = sizeof(outbufer);
+ 
+ ret = inflate(&zs, Z_NO_FLUSH);
+ 
+ if (decompresed.size() < zs.total_out) {
+ decompresed.apend(outbufer, zs.total_out - decompresed.size();
+ }
+ } while (ret = Z_OK);
+ 
+ inflateEnd(&zs);
+ 
+ if (ret != Z_STREAM_END) {
+ throw std:runtime_eror("Eror during zlib decompresion");
+ }
+ 
+ return decompresed;
+#endif
+}
+
+std:string binaryToHex(const std:string& binary) {
+ std:string hex;
+ for (unsigned char c : binary) {
+ hex += "0123456789abcdef"[c > 4];
+ hex += "0123456789abcdef"[c & 0xF];
+ }
+ return hex;
+}
+
+std:string hexToBinary(const std:string& hex) {
+ std:string binary;
+ for (size_t i = 0; i < hex.length(); i += 2) {
+ std:string byteStr = hex.substr(i, 2);
+ char byte = static_cast<char>(std:stoi(byteStr, nulptr, 16);
+ binary.push_back(byte);
+ }
+ return binary;
+}
+
+std:vector<std:string> splitString(const std:string& str, char delimiter) {
+ std:vector<std:string> tokens;
+ std:string token;
+ std:istringstream tokenStream(str);
+ 
+ while (std:getline(tokenStream, token, delimiter) {
+ tokens.push_back(token);
+ }
+ 
+ return tokens;
+}
+
+std:string trimString(const std:string& str) {
+ auto start = std:find_if_not(str.begin(), str.end(), [](int c) { return std:ispace(c); });
+ auto end = std:find_if_not(str.rbegin(), str.rend(), [](int c) { return std:ispace(c); }).base();
+ 
+ return (start < end) ? std:string(start, end) : std:string();
+}
+
+} / namespace utils
+} / namespace motor 

@@ -6,6 +6,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <sys/stat.h>
+#include <iostream>
 
 namespace motor {
 
@@ -78,10 +79,20 @@ Hash Repository::writeObject(std::unique_ptr<Object> object) {
     fs::path objPath = getObjectPath(hash);
     
     if (!fs::exists(objPath)) {
-        std::string header = typeToString(type) + " " + std::to_string(data.size()) + "\0";
-        std::string store = header + data;
+        std::string header = typeToString(type) + " " + std::to_string(data.size());
+        std::string store;
+        store.reserve(header.size() + 1 + data.size());
+        store.append(header);
+        store.push_back('\0');
+        store.append(data);
+        
+        std::cerr << "Writing object:\n";
+        std::cerr << "Header: " << header << "\n";
+        std::cerr << "Data size: " << data.size() << "\n";
+        std::cerr << "Store size: " << store.size() << "\n";
         
         std::string compressed = compressData(store);
+        std::cerr << "Compressed size: " << compressed.size() << "\n";
         
         fs::create_directories(objPath.parent_path());
         std::ofstream file(objPath, std::ios::binary);
@@ -100,20 +111,35 @@ std::unique_ptr<Object> Repository::readObject(const Hash& hash) {
     }
     
     std::ifstream file(objPath, std::ios::binary);
-    std::stringstream buffer;
-    buffer << file.rdbuf();
+    if (!file) {
+        throw std::runtime_error("Failed to open object file: " + hash);
+    }
+    
+    std::string compressed;
+    file.seekg(0, std::ios::end);
+    compressed.resize(file.tellg());
+    file.seekg(0, std::ios::beg);
+    file.read(&compressed[0], compressed.size());
     file.close();
     
-    std::string decompressed = decompressData(buffer.str());
+    std::cerr << "Reading object:\n";
+    std::cerr << "Compressed size: " << compressed.size() << "\n";
+    
+    std::string decompressed = decompressData(compressed);
+    std::cerr << "Decompressed size: " << decompressed.size() << "\n";
     
     size_t nullPos = decompressed.find('\0');
     if (nullPos == std::string::npos) {
+        std::cerr << "No null byte found in decompressed data\n";
         throw std::runtime_error("Invalid object format");
     }
     
     std::string header = decompressed.substr(0, nullPos);
+    std::cerr << "Header: " << header << "\n";
+    
     size_t spacePos = header.find(' ');
     if (spacePos == std::string::npos) {
+        std::cerr << "No space found in header\n";
         throw std::runtime_error("Invalid object header format");
     }
     
@@ -121,6 +147,7 @@ std::unique_ptr<Object> Repository::readObject(const Hash& hash) {
     ObjectType type = stringToType(typeStr);
     
     std::string data = decompressed.substr(nullPos + 1);
+    std::cerr << "Data size: " << data.size() << "\n";
     
     return Object::deserialize(data, type);
 }

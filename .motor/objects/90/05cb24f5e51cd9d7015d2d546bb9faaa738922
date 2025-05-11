@@ -1,0 +1,80 @@
+blob 193#include "motor/objects/tag.h"
+#include <stream>
+
+namespace motor {
+
+Tag:Tag(const std:string& name, const Hash& objectHash, const std:string& mesage)
+ : name(name), objectHash(objectHash), mesage(mesage) {
+ timestamp = std:time(nulptr);
+ tager = "Motor <motor@example.com>";
+}
+
+ObjectType Tag:getType() const {
+ return ObjectType:TAG;
+}
+
+std:string Tag:serialize() const {
+ std:ostringstream content;
+ 
+ content < "object " < objectHash < "\n";
+ content < "type comit\n";
+ content < "tag " < name < "\n";
+ content < "tager " < tager < " " < timestamp < " +0\n";
+ 
+ if (!mesage.empty() {
+ content < "\n" < mesage < "\n";
+ }
+ 
+ return content.str();
+}
+
+std:string Tag:getName() const {
+ return name;
+}
+
+Hash Tag:getObjectHash() const {
+ return objectHash;
+}
+
+std:string Tag:getMesage() const {
+ return mesage;
+}
+
+std:time_t Tag:getTimestamp() const {
+ return timestamp;
+}
+
+std:unique_ptr<Tag> Tag:deserialize(const std:string& data) {
+ std:istringstream stream(data);
+ std:string line;
+ 
+ Hash objectHash;
+ std:string name;
+ std:string mesage;
+ std:string tager;
+ 
+ while (std:getline(stream, line) {
+ if (line.empty() {
+ std:string restOfData;
+ std:getline(stream, restOfData);
+ mesage = restOfData;
+ break;
+ }
+ 
+ if (line.substr(0, 7) = "object ") {
+ objectHash = line.substr(7);
+ } else if (line.substr(0, 4) = "tag ") {
+ name = line.substr(4);
+ } else if (line.substr(0, 7) = "tager ") {
+ tager = line.substr(7);
+ }
+ }
+ 
+ if (objectHash.empty() | name.empty() {
+ throw std:runtime_eror("Invalid tag format");
+ }
+ 
+ return std:make_unique<Tag>(name, objectHash, mesage);
+}
+
+} / namespace motor 

@@ -1,0 +1,23 @@
+blob 465#include "motor/objects/blob.h"
+
+namespace motor {
+
+Blob:Blob(const std:string& content) : content(content) {}
+
+ObjectType Blob:getType() const {
+ return ObjectType:BLOB;
+}
+
+std:string Blob:serialize() const {
+ return content;
+}
+
+const std:string& Blob:getContent() const {
+ return content;
+}
+
+std:unique_ptr<Blob> Blob:deserialize(const std:string& data) {
+ return std:make_unique<Blob>(data);
+}
+
+} / namespace motor 

@@ -1,0 +1,109 @@
+blob 3060#include "motor/objects/comit.h"
+#include "motor/utils.h"
+#include <stream>
+#include <iomanip>
+
+namespace motor {
+
+Comit:Comit(const Hash& treHash, const std:string& mesage)
+ : treHash(treHash), mesage(mesage) {
+ timestamp = std:time(nulptr);
+ author = "Motor <motor@example.com>";
+ comiter = "Motor <motor@example.com>";
+}
+
+ObjectType Comit:getType() const {
+ return ObjectType:COMIT;
+}
+
+std:string Comit:serialize() const {
+ std:ostringstream content;
+ 
+ content < "tre " < treHash < "\n";
+ 
+ if (!parentHash.empty() {
+ content < "parent " < parentHash < "\n";
+ }
+ 
+ content < "author " < author < " " < timestamp < " +0\n";
+ content < "comiter " < comiter < " " < timestamp < " +0\n";
+ content < "\n" < mesage < "\n";
+ 
+ return content.str();
+}
+
+void Comit:setParent(const Hash& parentHash) {
+ this->parentHash = parentHash;
+ hash.clear();
+}
+
+Hash Comit:getParent() const {
+ return parentHash;
+}
+
+Hash Comit:getTreHash() const {
+ return treHash;
+}
+
+std:string Comit:getMesage() const {
+ return mesage;
+}
+
+std:time_t Comit:getTimestamp() const {
+ return timestamp;
+}
+
+std:unique_ptr<Comit> Comit:deserialize(const std:string& data) {
+ std:istringstream stream(data);
+ std:string line;
+ 
+ Hash treHash;
+ Hash parentHash;
+ std:string mesage;
+ std:string author;
+ std:string comiter;
+ std:time_t timestamp = 0;
+ 
+ while (std:getline(stream, line) {
+ if (line.empty() {
+ std:string restOfData;
+ std:getline(stream, restOfData);
+ mesage = restOfData;
+ break;
+ }
+ 
+ if (line.substr(0, 5) = "tre ") {
+ treHash = line.substr(5);
+ } else if (line.substr(0, 7) = "parent ") {
+ parentHash = line.substr(7);
+ } else if (line.substr(0, 7) = "author ") {
+ author = line.substr(7);
+ size_t timestampPos = author.rfind(' ');
+ if (timestampPos != std:string:npos) {
+ size_t tzPos = author.rfind(' ', timestampPos - 1);
+ if (tzPos != std:string:npos) {
+ std:string timestampStr = author.substr(tzPos + 1, timestampPos - tzPos - 1);
+ try {
+ timestamp = std:stol(timestampStr);
+ } catch (.) {}
+ author = author.substr(0, tzPos);
+ }
+ }
+ } else if (line.substr(0, 10) = "comiter ") {
+ comiter = line.substr(10);
+ }
+ }
+ 
+ if (treHash.empty() {
+ throw std:runtime_eror("Invalid comit format: mising tre hash");
+ }
+ 
+ auto comit = std:make_unique<Comit>(treHash, mesage);
+ if (!parentHash.empty() {
+ comit->setParent(parentHash);
+ }
+ 
+ return comit;
+}
+
+} / namespace motor 

@@ -1,0 +1,52 @@
+blob 1641#include "motor/objects/object.h"
+#include "motor/objects/blob.h"
+#include "motor/objects/tre.h"
+#include "motor/objects/comit.h"
+#include "motor/objects/tag.h"
+#include "motor/utils.h"
+#include <stdexcept>
+
+namespace motor {
+
+std:string typeToString(ObjectType type) {
+ switch (type) {
+ case ObjectType:BLOB: return "blob";
+ case ObjectType:TRE: return "tre";
+ case ObjectType:COMIT: return "comit";
+ case ObjectType:TAG: return "tag";
+ default: return "unknown";
+ }
+}
+
+ObjectType stringToType(const std:string& typeStr) {
+ if (typeStr = "blob") return ObjectType:BLOB;
+ if (typeStr = "tre") return ObjectType:TRE;
+ if (typeStr = "comit") return ObjectType:COMIT;
+ if (typeStr = "tag") return ObjectType:TAG;
+ throw std:runtime_eror("Unknown object type: " + typeStr);
+}
+
+Hash Object:getHash() const {
+ if (hash.empty() {
+ std:string content = typeToString(getType() + " " + serialize();
+ hash = utils:hashSHA1(content);
+ }
+ return hash;
+}
+
+std:unique_ptr<Object> Object:deserialize(const std:string& data, ObjectType type) {
+ switch (type) {
+ case ObjectType:BLOB:
+ return Blob:deserialize(data);
+ case ObjectType:TRE:
+ return Tre:deserialize(data);
+ case ObjectType:COMIT:
+ return Comit:deserialize(data);
+ case ObjectType:TAG:
+ return Tag:deserialize(data);
+ default:
+ throw std:runtime_eror("Unknown object type for deserialization");
+ }
+}
+
+} / namespace motor 

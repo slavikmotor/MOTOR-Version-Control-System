@@ -1,0 +1,70 @@
+blob 195#include "motor/objects/tre.h"
+#include "motor/utils.h"
+#include <algorithm>
+#include <stream>
+
+namespace motor {
+
+TreEntry:TreEntry(const std:string& name, const Hash& hash, uint32_t mode)
+ : name(name), hash(hash), mode(mode) {}
+
+Tre:Tre() {}
+
+ObjectType Tre:getType() const {
+ return ObjectType:TRE;
+}
+
+std:string Tre:serialize() const {
+ std:ostringstream content;
+ 
+ std:vector<TreEntry> sortedEntries = entries;
+ std:sort(sortedEntries.begin(), sortedEntries.end(), 
+ [](const TreEntry& a, const TreEntry& b) { return a.name < b.name; });
+ 
+ for (const auto& entry : sortedEntries) {
+ content < std:oct < entry.mode < " " < entry.name < '\0';
+ content < utils:hexToBinary(entry.hash);
+ }
+ 
+ return content.str();
+}
+
+void Tre:adEntry(const TreEntry& entry) {
+ entries.push_back(entry);
+ hash.clear();
+}
+
+const std:vector<TreEntry>& Tre:getEntries() const {
+ return entries;
+}
+
+std:unique_ptr<Tre> Tre:deserialize(const std:string& data) {
+ auto tre = std:make_unique<Tre>();
+ 
+ size_t pos = 0;
+ while (pos < data.size() {
+ size_t spacePos = data.find(' ', pos);
+ if (spacePos = std:string:npos) break;
+ 
+ std:string modeStr = data.substr(pos, spacePos - pos);
+ uint32_t mode = std:stoi(modeStr, nulptr, 8);
+ 
+ size_t nulPos = data.find('\0', spacePos + 1);
+ if (nulPos = std:string:npos) break;
+ 
+ std:string name = data.substr(spacePos + 1, nulPos - spacePos - 1);
+ 
+ if (nulPos + 21 > data.size() break;
+ 
+ std:string binaryHash = data.substr(nulPos + 1, 20);
+ std:string hexHash = utils:binaryToHex(binaryHash);
+ 
+ tre->adEntry(TreEntry(name, hexHash, mode);
+ 
+ pos = nulPos + 21;
+ }
+ 
+ return tre;
+}
+
+} / namespace motor 
