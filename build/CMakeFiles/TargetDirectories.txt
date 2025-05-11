@@ -1,0 +1,4 @@
+C:/Users/nikit/OneDrive/Рабочий стол/Version-control-system-MOTOR/build/CMakeFiles/motor.dir
+C:/Users/nikit/OneDrive/Рабочий стол/Version-control-system-MOTOR/build/CMakeFiles/INSTALL.dir
+C:/Users/nikit/OneDrive/Рабочий стол/Version-control-system-MOTOR/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/nikit/OneDrive/Рабочий стол/Version-control-system-MOTOR/build/CMakeFiles/ZERO_CHECK.dir
